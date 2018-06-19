@@ -21,10 +21,13 @@ player-shot-zones
 #Details#
 four-point-plays-and-one
 player_assist_details
+
+Clutch Time:  During the 4th quarter or overtime, with less than five minutes remaining, 
+and neither team ahead by more than five points
 """
 
 categories =np.asarray(['basic_stats_pl','clutch_player_stats','advanced_player_stats',
-              'player_scoring_runs','player_miscellaneous_scoring','player_shot_types',
+              'player_miscellaneous_scoring','player_shot_types',
               'player_shot_distances','player_shot_zones',
               'four_point_and_one','player_assist_details'])
 

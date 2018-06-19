@@ -4,8 +4,14 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn import metrics
 
+#452x108
+# players_data = pd.read_csv("nba_player_whole_stats_edited_column_name.csv")
+players_data = pd.read_csv("nba_player_whole_stats.csv")
+with open('column_dictionary.txt','w+') as f:
+    for item in players_data.columns:
+        f.writelines(item + '\n')
+f.close()
 
-players_data = pd.read_csv("nba_player_shotting.csv")
 print players_data.columns
 players_shoot_stat = players_data.values[:,4:]
 players_name_team = players_data.values[:,1:3]
