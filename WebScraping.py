@@ -34,7 +34,7 @@ categories =np.asarray(['basic_stats_pl','clutch_player_stats','advanced_player_
 url_template = 'http://www.nbaminer.com/nbaminer_nbaminer/{category}.php' \
                '?partitionpage={season}&partition2page={type}&page={page}'
 """
-partitionpage: 1=17-18 season; 8= 10=08-09 season
+partitionpage: 1=17-18 season; 8=10-11; 10=08-09 season
 partition2page: 1=regular; 2=playoff
 """
 
@@ -60,7 +60,7 @@ for idx, category in enumerate(categories) :
                 player_row_stat.append(td.getText())
             category_data_collection.add(tuple(player_row_stat[2:]))
     category_dataframe = pd.DataFrame(list(category_data_collection), columns=header_list, dtype='float')
-    category_dataframe.to_csv(category+'.csv')
+    # category_dataframe.to_csv(category+'.csv')
     if idx == 0:
         whole_dataframe = category_dataframe
     else:

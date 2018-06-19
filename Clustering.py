@@ -4,15 +4,25 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn import metrics
 
-#452x108
-# players_data = pd.read_csv("nba_player_whole_stats_edited_column_name.csv")
-players_data = pd.read_csv("nba_player_whole_stats.csv")
-with open('column_dictionary.txt','w+') as f:
-    for item in players_data.columns:
-        f.writelines(item + '\n')
-f.close()
 
-print players_data.columns
+# players_data = pd.read_csv("nba_player_whole_stats_edited_column_name.csv")
+players_dataframe = pd.read_csv("nba_player_whole_stats.csv")
+# write data columns to file
+# with open('column_dictionary.txt','w+') as f:
+#     for item in players_dataframe.columns:
+#         f.writelines(item + '\n')
+# f.close()
+# print players_dataframe.head()
+print 'shape:', players_dataframe.shape #452x124
+players_dataframe.fillna(value=0.0, inplace=True)
+# print players_dataframe.And_One
+missing_values_count = players_dataframe.isnull().sum()
+# print type(missing_values_count)
+print missing_values_count
+# print len(players_dataframe.loc[players_dataframe.And_One.isnull()].Player)
+
+"""
+# print players_data.columns
 players_shoot_stat = players_data.values[:,4:]
 players_name_team = players_data.values[:,1:3]
 min = 5
@@ -81,3 +91,4 @@ def kmeans_original_data_9clusters_plot():
 
 kmeans_original_data_9clusters_plot()
 
+"""
