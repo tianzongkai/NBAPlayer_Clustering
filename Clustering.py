@@ -1,8 +1,12 @@
 from sklearn.cluster import KMeans
 import numpy as np
+from numpy import linalg as la
+from matplotlib import cm
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn import metrics
+from sklearn import preprocessing
+from sklearn.decomposition import PCA, FastICA
 import time
 
 
@@ -25,7 +29,23 @@ players_dataframe.fillna(value=0.0, inplace=True)
 
 
 # print players_data.columns
-players_stat = players_dataframe.values[:,3:]
+players_stat = players_dataframe.values[:,3:] # np array
+num_features = players_stat.shape[1]
+
+min_max_scaler = preprocessing.MinMaxScaler()
+np_scaled = min_max_scaler.fit_transform(players_stat)
+players_stat_normalized = pd.DataFrame(np_scaled)
+
+pca_17d_transformed_data = np.load( "nba_pca_transformed_17d_matrix.npy")
+pca_3d_transformed_data = np.load( "nba_pca_transformed_3d_matrix.npy")
+ica_transformed_data = np.load( "ablone_ica_transformed_matrix.npy")
+rp_transformed_data = np.load( "ablone_rp_transformed_matrix.npy")
+d_reduction_alg_dict = {'Original': non_label_dataset,
+                        'PCA': pca_transformed_data,
+                        'ICA': ica_transformed_data,
+                        'RP': rp_transformed_data,
+                        'LDA': lda__transformed_data}
+
 print players_stat.shape
 
 
@@ -88,16 +108,16 @@ def kmeans_original_data_clusters_plot():
     for color, cluster_label in zip(colors, range(num_clusters)):
         print cluster_label
         plt.subplot(121)
-        plt.scatter(players_stat[cluster_results == cluster_label, 5],
-                    players_stat[cluster_results == cluster_label, 9], color=color,
+        plt.scatter(players_stat[cluster_results == cluster_label, 25],
+                    players_stat[cluster_results == cluster_label, 33], color=color,
                     label=cluster_label, marker='+')
         plt.xlabel('Above the break-3 Usage In the paint (Non-RA) Usage', fontsize=7)
         plt.xticks(fontsize=7)
         plt.yticks(fontsize=7)
         plt.suptitle("NBA Players divided into 9 groups \nbased on shooting distance & zone")
         plt.subplot(122)
-        plt.scatter(players_stat[cluster_results == cluster_label, 8],
-                    players_stat[cluster_results == cluster_label, 16], color=color,
+        plt.scatter(players_stat[cluster_results == cluster_label, 42],
+                    players_stat[cluster_results == cluster_label, 68], color=color,
                     label=cluster_label, marker='+')
         plt.xlabel('Mid-range Usage vs Restricted Area Usage', fontsize=7)
         plt.xticks(fontsize=7)
@@ -105,5 +125,6 @@ def kmeans_original_data_clusters_plot():
     # plt.legend(loc='best', shadow=False, scatterpoints=1)
     plt.show()
 
-kmeans_original_data_clusters_plot()
+# kmeans_original_data_clusters_plot()
+
 
