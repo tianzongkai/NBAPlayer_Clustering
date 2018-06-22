@@ -30,48 +30,44 @@ players_dataframe.fillna(value=0.0, inplace=True)
 
 # print players_data.columns
 players_stat = players_dataframe.values[:,3:] # np array
-num_features = players_stat.shape[1]
+num_features, num_players = players_stat.shape
 
 min_max_scaler = preprocessing.MinMaxScaler()
 np_scaled = min_max_scaler.fit_transform(players_stat)
 players_stat_normalized = pd.DataFrame(np_scaled)
-
-pca_17d_transformed_data = np.load( "nba_pca_transformed_17d_matrix.npy")
-pca_3d_transformed_data = np.load( "nba_pca_transformed_3d_matrix.npy")
-ica_transformed_data = np.load( "ablone_ica_transformed_matrix.npy")
-rp_transformed_data = np.load( "ablone_rp_transformed_matrix.npy")
-d_reduction_alg_dict = {'Original': non_label_dataset,
-                        'PCA': pca_transformed_data,
-                        'ICA': ica_transformed_data,
-                        'RP': rp_transformed_data,
-                        'LDA': lda__transformed_data}
-
-print players_stat.shape
+players_name = players_dataframe.values[:,1] # np array
 
 
-def kmeans():
+print num_features, num_players
+
+
+def kmeans(type):
+    if type == 'Original':
+        data = players_stat
+    else:
+        data = players_stat_normalized
     initialization = 'k-means++'  # 'k-means++'
     min = 5
-    max = 40
+    max = 81
     step = 5
     k_range = np.array(range(min, max))
     varing_k_cluster_labels = []
-    filename = ('k_means_%s_%s') % (initialization, time.strftime("%m%d%H%M%S"))
+    filename = ('%s_k_means_%s_%s') % (type, initialization, time.strftime("%m%d%H%M%S"))
     silhouette_scores = np.array([])
     sse_array = np.array([])
     for i in k_range:
         print i
-        kmeans = KMeans(init=initialization, n_clusters=i, n_init=30).fit(players_stat)
-        cluster_labels = kmeans.fit_predict(players_stat)
+        kmeans = KMeans(init=initialization, n_clusters=i, n_init=30).fit(data)
+        cluster_labels = kmeans.fit_predict(data)
         varing_k_cluster_labels.append(cluster_labels)
-        silhouette = metrics.silhouette_score(players_stat, cluster_labels)
+        silhouette = metrics.silhouette_score(data, cluster_labels)
         sse = kmeans.inertia_ / num_players
         silhouette_scores = np.append(silhouette_scores, silhouette)
         sse_array = np.append(sse_array, sse)
     np.save(filename, varing_k_cluster_labels)
     plt.close()
     # print "silhouette coefficient of original labels %0.03f" % metrics.silhouette_score(players_shoot_stat, labels)
-
+    plt.figure(figsize=(12, 5))
     plt.subplot(121)
     plt.plot(k_range, sse_array, "ro-", label='Avg Sum of Squared Error')
     plt.grid(True)
@@ -86,44 +82,19 @@ def kmeans():
     plt.plot(k_range, silhouette_scores, "go-", label="Silhouette Coefficient")
     plt.grid(True)
     plt.xticks(range(min, max, step))
-    plt.yticks(np.linspace(0.17, 0.25, 9))
+    if type == 'Original':
+        plt.yticks(np.linspace(0.15, 0.25, 11))
     plt.ylabel('Silhouette')
     plt.xlabel('# of clusters')
     # plt.legend()
-    plt.suptitle(("NBA players k-means clustering\nDeciding value of k with %s initilization") % initialization)
+    plt.suptitle(("NBA players %s k-means++ clustering\nDeciding value of k with %s initilization") % (type, initialization))
     plt.savefig(("%s.png") % filename)
     # plt.show()
 
-# for _ in range(5):
-#     kmeans()
-colors = ['darkorchid', 'turquoise', 'darkorange', 'crimson', 'green',
-          'dodgerblue', 'grey', 'greenyellow', 'navy', 'aqua',
-          'brown', 'crimson', 'darkgoldenrod']
-
-def kmeans_original_data_clusters_plot():
-    cluster_results = np.load("k_means_k-means++_11clusters.npy") # a matrix of 35 x 452, num of clusters varing from 5 to 39
-    cluster_results = cluster_results[6] # pick the row of 11 clusters
-    num_clusters=np.amax(cluster_results)+1
-    print num_clusters
-    for color, cluster_label in zip(colors, range(num_clusters)):
-        print cluster_label
-        plt.subplot(121)
-        plt.scatter(players_stat[cluster_results == cluster_label, 25],
-                    players_stat[cluster_results == cluster_label, 33], color=color,
-                    label=cluster_label, marker='+')
-        plt.xlabel('Above the break-3 Usage In the paint (Non-RA) Usage', fontsize=7)
-        plt.xticks(fontsize=7)
-        plt.yticks(fontsize=7)
-        plt.suptitle("NBA Players divided into 9 groups \nbased on shooting distance & zone")
-        plt.subplot(122)
-        plt.scatter(players_stat[cluster_results == cluster_label, 42],
-                    players_stat[cluster_results == cluster_label, 68], color=color,
-                    label=cluster_label, marker='+')
-        plt.xlabel('Mid-range Usage vs Restricted Area Usage', fontsize=7)
-        plt.xticks(fontsize=7)
-        plt.yticks(fontsize=7)
-    # plt.legend(loc='best', shadow=False, scatterpoints=1)
-    plt.show()
+for _ in range(5):
+    # type = 'Original'
+    type = 'Normalized'
+    kmeans(type)
 
 # kmeans_original_data_clusters_plot()
 

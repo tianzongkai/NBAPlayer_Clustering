@@ -136,7 +136,8 @@ def pca_3_components():
     np.save(filename, transformed_data)
 
 def ica_varing_components():
-    n_components = np.arange(2, num_features+1, 1)
+    n_components_max = num_features+1 # num_features+1
+    n_components = np.arange(2, n_components_max, 1)
     kurtosis_matrix = np.array([])
     for n in n_components:
         print n
@@ -154,7 +155,7 @@ def ica_varing_components():
     plt.xlim(np.amin(n_components), np.amax(n_components))
     # plt.ylim(1e-17,1e-1)
     # plt.yscale('log')
-    plt.xticks(range(2, num_features+1, 10))
+    plt.xticks(range(2, n_components_max, 10))
     plt.ylabel('kurtosis')
     plt.xlabel('# of components')
     plt.legend()
@@ -162,45 +163,65 @@ def ica_varing_components():
     plt.show()
 
 def rp():
-    filename = "nba_rp_transformed_matrix.npy"
-    iteration = 100
-    n_components = np.arange(2, 16, 1)
+    filename_template = "nba_rp_transformed_{dimension}d_matrix.npy"
+    iteration = 50
+    n_components_min = 2
+    n_components_max = 10
+    n_components = np.arange(n_components_min, n_components_max, 1)
     x_value = np.repeat(n_components, iteration)
-    f_noram_array = np.array([])
-    least_f_norm_percent_change = float('Inf')
+    distortion_array = np.array([])
+    least_distortion = float('Inf')
+    least_distortion_dimension = 0
     best_transformed_data = np.array([])
+    origin_dist_matrix = np.asarray([[la.norm(u - v) for v in players_stat] for u in players_stat])
+    def calculate_distortion(transformed_data):
+        size = transformed_data.shape[0]
+        max_distortion = float('-inf')
+        for u in range(size):
+            for v in range(size):
+                if v < u:
+                    origin_dist = origin_dist_matrix[u,v]
+                    transformed_dist = la.norm(transformed_data[u] - transformed_data[v])
+                    distortion = transformed_dist / origin_dist
+                    if distortion > max_distortion: max_distortion = distortion
+        return max_distortion
+
     for n in n_components:
+        print n
         for i in range(iteration):
             rp = random_projection.GaussianRandomProjection(n_components=n,eps=0.1)
             transformed_data = rp.fit_transform(players_stat)
-            reconstructed_data = np.dot(transformed_data, rp.components_)
-            f_norm_percent_change = 100 * abs(
-                (la.norm(players_stat) - la.norm(reconstructed_data)))/ la.norm(players_stat)
-            f_noram_array = np.append(f_noram_array, f_norm_percent_change)
-            if f_norm_percent_change < least_f_norm_percent_change:
-                least_f_norm_percent_change = f_norm_percent_change
+            distortion = calculate_distortion(transformed_data)
+            distortion_array = np.append(distortion_array, distortion)
+            if distortion < least_distortion:
+                least_distortion = distortion
                 best_transformed_data = transformed_data
-    print "# of components: %r" % best_transformed_data.shape[1]
-    print "least_f_norm_percent_change is %.2f%%" % least_f_norm_percent_change
-    #np.save(filename,best_transformed_data)
-    plt.scatter(x_value, f_noram_array, marker='+')
-    plt.xlim(np.amin(n_components)-1, np.amax(n_components)+1)
-    plt.xticks(np.arange(np.amin(n_components),np.amax(n_components),1))
-    plt.yscale('log')
+                least_distortion_dimension = n
+    # print "# of components: %r" % best_transformed_data.shape[1]
+    # print "least_f_norm_percent_change is %.2f%%" % least_f_norm_percent_change
+    filename = filename_template.format(dimension=str(least_distortion_dimension))
+    np.save(filename,best_transformed_data)
+    plt.scatter(x_value, distortion_array, marker='+')
+    # plt.xlim(n_components_min, n_components_max)
+    plt.xticks(np.arange(n_components_min-1,n_components_max+1,1))
+    # plt.yscale('log')
     plt.grid(True)
     plt.xlabel("# of components")
-    plt.ylabel("Frobenius Norm Percentage Change %")
-    note = "Best result %.2f%% f-norm change" % (least_f_norm_percent_change)
-    notex, notey = best_transformed_data.shape[1], least_f_norm_percent_change
+    plt.ylabel("Distortion")
+    note = "Least distortion: %.2f" % (least_distortion)
+    notex, notey = best_transformed_data.shape[1], least_distortion
     plt.title("NBA Players Stats, Randomized Projects\n %r iterations for each # of components" % iteration)
     plt.annotate(note, xy=(notex ,notey), xytext=(notex + 0.2,notey + 0.2), wrap=True,
         arrowprops=dict(facecolor='black', shrink=0.005))
-    # plt.savefig("C:\\Users\\Zongkai\\Google Drive\\GaTech\\2017Fall_MachineLearning\\Assignment3\\pics\\2\\Ablone_RP.jpg")
-    plt.show()
+    plt.savefig("random_projection_distortion.png")
+    plt.close()
 
 
 
 # correlation_egienvalue()
 # pca_varing_k()
 # ica_varing_components()
-rp()
+# rp()
+# ica_varing_components()
+pca_17_components()
+pca_3_components()
