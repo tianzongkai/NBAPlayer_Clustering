@@ -4,8 +4,7 @@ from numpy import linalg as la
 from matplotlib import cm
 import pandas as pd
 import matplotlib.pyplot as plt
-from sklearn import metrics
-from sklearn import preprocessing
+from sklearn import metrics, manifold, preprocessing
 from sklearn.decomposition import PCA, FastICA
 from scipy import spatial as sp
 from scipy import stats as sta
@@ -14,6 +13,8 @@ import time
 
 players_dataframe = pd.read_csv("nba_player_whole_stats.csv")
 players_dataframe.drop(players_dataframe[players_dataframe.Games < 15].index, inplace=True)
+players_dataframe.drop(columns='Total_Plus_Minus', inplace=True)
+
 # write data columns to file
 # with open('column_dictionary.txt','w+') as f:
 #     for item in players_dataframe.columns:
@@ -22,6 +23,9 @@ players_dataframe.drop(players_dataframe[players_dataframe.Games < 15].index, in
 # print players_dataframe.head()
 print 'shape:', players_dataframe.shape #452x124, 411x124 after remove <15 games
 players_dataframe.fillna(value=0.0, inplace=True)
+for column in players_dataframe.filter(regex='Pct').columns:
+    players_dataframe[column] = players_dataframe[column].apply(lambda x:x*100)
+
 # print players_dataframe.And_One
 # missing_values_count = players_dataframe.isnull().sum()
 # print type(missing_values_count)
@@ -34,8 +38,8 @@ players_stat = players_dataframe.values[:,3:] # np array
 num_features = players_stat.shape[1]
 
 min_max_scaler = preprocessing.MinMaxScaler()
-np_scaled = min_max_scaler.fit_transform(players_stat)
-players_stat_normalized = pd.DataFrame(np_scaled)
+players_stat_normalized = min_max_scaler.fit_transform(players_stat)
+players_stat_normalized_df = pd.DataFrame(players_stat_normalized)
 
 def correlation_egienvalue():
     cov = np.cov(players_stat_normalized, rowvar=0)
@@ -44,9 +48,9 @@ def correlation_egienvalue():
     abs_cov = np.absolute(cov)
     abs_corr = np.absolute(corr)
     #cov = np.dot(non_label_dataset.T, non_label_dataset)
-    print abs_corr
-    print eigvalues
-
+    # print abs_corr
+    # print eigvalues
+    plt.figure(figsize=(18, 9))
     plt.subplot(131)
     cmap = cm.get_cmap()
     cax = plt.imshow(abs_corr, interpolation="nearest", cmap=cmap)
@@ -76,10 +80,13 @@ def correlation_egienvalue():
     plt.ylabel('Eigenvalue')
     plt.xlabel('Index of eigenvalue')
     plt.title("Rest eigenvalues")
+    plt.savefig("original_Correlation_Eigenvalues.png")
+    plt.close()
     # plt.legend()
-    plt.show()
+    # plt.show()
 
 def pca_varing_k():
+    print 'pca_varing_k'
     n_components = np.arange(2,20,1)
     retained_variance_vs_components = np.array([])
     distance_vs_components = np.array([])
@@ -98,7 +105,7 @@ def pca_varing_k():
         distance_vs_components = np.append(distance_vs_components, sum_dist)
     # print retained_variance_vs_components
     # print distance_vs_components
-
+    plt.figure(figsize=(16, 9))
     plt.subplot(121)
     plt.plot(n_components, retained_variance_vs_components, "o-", label="retained variance ratio")
     plt.grid(True)
@@ -118,8 +125,9 @@ def pca_varing_k():
     plt.ylabel('frobenius norm % change')
     plt.xlabel('# of components')
     plt.legend()
-    plt.suptitle("PCA on normalized data\nDeciding # of components for clustering")
-    plt.show()
+    plt.suptitle("PCA - Deciding # of components for clustering")
+    plt.savefig('PCA_deciding_num_components.png')
+    plt.close()
 
 def pca_17_components():
     filename = "nba_pca_transformed_17d_matrix.npy"
@@ -135,45 +143,60 @@ def pca_3_components():
     transformed_data = pca.transform(players_stat_normalized)
     np.save(filename, transformed_data)
 
-def ica_varing_components():
-    n_components_max = num_features+1 # num_features+1
+def ica_varing_components(data, type):
+    n_components_max = 56 # num_features+1
     n_components = np.arange(2, n_components_max, 1)
     kurtosis_matrix = np.array([])
     for n in n_components:
         print n
-        ica = FastICA(n_components=n,algorithm='deflation', max_iter=100)
-        ica.fit(players_stat)
-        transformed_data = ica.transform(players_stat)
+        ica = FastICA(n_components=n,whiten=True, algorithm='deflation', max_iter=100)
+        ica.fit(data)
+        transformed_data = ica.transform(data)
         #kurtosis = sta.kurtosis(transformed_data, axis=None)
         # print sta.kurtosis(transformed_data, axis=None)
         kurtosis = sta.kurtosis(transformed_data) # for Normal distribution, kurtosis = 0 by this algorithm
         kurtosis_matrix = np.append(kurtosis_matrix, np.average(kurtosis))
-
+    plt.figure(figsize=(16, 9))
     # print kurtosis_matrix
     plt.plot(n_components, kurtosis_matrix, "o-", label="kurtosis")
     plt.grid(True)
     plt.xlim(np.amin(n_components), np.amax(n_components))
     # plt.ylim(1e-17,1e-1)
     # plt.yscale('log')
-    plt.xticks(range(2, n_components_max, 10))
+    plt.xticks(range(np.amin(n_components), n_components_max+3, 3))
     plt.ylabel('kurtosis')
     plt.xlabel('# of components')
     plt.legend()
-    plt.title("NBA Player Stats ICA\nKurtosis of Normal Distribution is 0 in this algorithm")
-    plt.show()
+    plt.title(("NBA Player Stats %s ICA\n(Kurtosis of Normal Distribution is 0 in this algorithm)") % (type))
+    plt.savefig(("original_ICA_kurtosis_2_to_%d_components.png") % n_components_max)
+    plt.close()
 
-def rp():
-    filename_template = "nba_rp_transformed_{dimension}d_matrix.npy"
+def run_ica():
+    print 'run_ica'
+    datas = [players_stat]
+    types = ['Un_normalized']
+    for data, type in zip(datas, types):
+        ica_varing_components(data, type)
+
+def ica_original_25_components():
+    filename = ("nba_original_ica_transformed_25d_matrix.npy")
+    ica = FastICA(n_components=37, algorithm='deflation', max_iter=100)
+    ica.fit(players_stat)
+    transformed_data = ica.transform(players_stat)
+    np.save(filename,transformed_data)
+
+def rp(data, type):
+    filename_template = "nba_{type}_rp_transformed_{dimension}d_matrix.npy"
     iteration = 50
     n_components_min = 2
-    n_components_max = 10
+    n_components_max = 20
     n_components = np.arange(n_components_min, n_components_max, 1)
     x_value = np.repeat(n_components, iteration)
     distortion_array = np.array([])
     least_distortion = float('Inf')
     least_distortion_dimension = 0
     best_transformed_data = np.array([])
-    origin_dist_matrix = np.asarray([[la.norm(u - v) for v in players_stat] for u in players_stat])
+    origin_dist_matrix = np.asarray([[la.norm(u - v) for v in data] for u in data])
     def calculate_distortion(transformed_data):
         size = transformed_data.shape[0]
         max_distortion = float('-inf')
@@ -182,7 +205,7 @@ def rp():
                 if v < u:
                     origin_dist = origin_dist_matrix[u,v]
                     transformed_dist = la.norm(transformed_data[u] - transformed_data[v])
-                    distortion = transformed_dist / origin_dist
+                    distortion = (transformed_dist / origin_dist) ** 2
                     if distortion > max_distortion: max_distortion = distortion
         return max_distortion
 
@@ -190,7 +213,7 @@ def rp():
         print n
         for i in range(iteration):
             rp = random_projection.GaussianRandomProjection(n_components=n,eps=0.1)
-            transformed_data = rp.fit_transform(players_stat)
+            transformed_data = rp.fit_transform(data)
             distortion = calculate_distortion(transformed_data)
             distortion_array = np.append(distortion_array, distortion)
             if distortion < least_distortion:
@@ -199,8 +222,9 @@ def rp():
                 least_distortion_dimension = n
     # print "# of components: %r" % best_transformed_data.shape[1]
     # print "least_f_norm_percent_change is %.2f%%" % least_f_norm_percent_change
-    filename = filename_template.format(dimension=str(least_distortion_dimension))
+    filename = filename_template.format(type = type, dimension=str(least_distortion_dimension))
     np.save(filename,best_transformed_data)
+    plt.figure(figsize=(16, 9))
     plt.scatter(x_value, distortion_array, marker='+')
     # plt.xlim(n_components_min, n_components_max)
     plt.xticks(np.arange(n_components_min-1,n_components_max+1,1))
@@ -210,18 +234,26 @@ def rp():
     plt.ylabel("Distortion")
     note = "Least distortion: %.2f" % (least_distortion)
     notex, notey = best_transformed_data.shape[1], least_distortion
-    plt.title("NBA Players Stats, Randomized Projects\n %r iterations for each # of components" % iteration)
+    plt.title("NBA Players Stats, Randomized Projects %s\n %r iterations for each # of components" % (type, iteration))
     plt.annotate(note, xy=(notex ,notey), xytext=(notex + 0.2,notey + 0.2), wrap=True,
         arrowprops=dict(facecolor='black', shrink=0.005))
-    plt.savefig("random_projection_distortion.png")
+    plt.savefig(("random_projection_distortion_%s.png") % type)
     plt.close()
 
+def run_rp():
+    print 'run_rp'
+    datas = [players_stat, players_stat_normalized]
+    types = ['Normalized']
+    # types = ['Un_normalized']
+    for data, type in zip(datas, types):
+        rp(data, type)
 
 
 # correlation_egienvalue()
 # pca_varing_k()
-# ica_varing_components()
-# rp()
-# ica_varing_components()
-pca_17_components()
-pca_3_components()
+# pca_17_components()
+# pca_3_components()
+# run_ica()
+# ica_original_25_components()
+# run_rp()
+#
