@@ -154,7 +154,8 @@ def ica_varing_components(data, type):
         transformed_data = ica.transform(data)
         #kurtosis = sta.kurtosis(transformed_data, axis=None)
         # print sta.kurtosis(transformed_data, axis=None)
-        kurtosis = sta.kurtosis(transformed_data) # for Normal distribution, kurtosis = 0 by this algorithm
+        kurtosis = sta.kurtosis(transformed_data, axis=0) # for Normal distribution, kurtosis = 0 by this algorithm
+        # shape = n_components when axis = 0, meaning kurtosis is calculated for each column
         kurtosis_matrix = np.append(kurtosis_matrix, np.average(kurtosis))
     plt.figure(figsize=(16, 9))
     # print kurtosis_matrix
@@ -168,7 +169,7 @@ def ica_varing_components(data, type):
     plt.xlabel('# of components')
     plt.legend()
     plt.title(("NBA Player Stats %s ICA\n(Kurtosis of Normal Distribution is 0 in this algorithm)") % (type))
-    plt.savefig(("original_ICA_kurtosis_2_to_%d_components.png") % n_components_max)
+    plt.savefig(("original_ICA_kurtosis_2_to_%d_components_axis_1.png") % n_components_max)
     plt.close()
 
 def run_ica():
@@ -253,7 +254,7 @@ def run_rp():
 # pca_varing_k()
 # pca_17_components()
 # pca_3_components()
-# run_ica()
+run_ica()
 # ica_original_25_components()
 # run_rp()
 #

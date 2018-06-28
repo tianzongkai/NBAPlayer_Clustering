@@ -21,7 +21,7 @@ players_dataframe.drop(columns='Total_Plus_Minus', inplace=True)
 # f.close()
 # print players_dataframe.head()
 
-print 'shape:', players_dataframe.shape #452x124, 411x124 after remove <15 games
+print 'shape:', players_dataframe.shape
 players_dataframe.fillna(value=0.0, inplace=True)
 
 # Apply operates on each row or column with the lambda function
@@ -38,7 +38,7 @@ for column in players_dataframe.filter(regex='Pct').columns:
 
 
 # print players_data.columns
-players_stat = players_dataframe.values[:,3:] # np array
+players_stat = players_dataframe.values[:,3:] # np array #411x119 after remove <15 games
 num_features, num_players = players_stat.shape
 
 min_max_scaler = preprocessing.MinMaxScaler()
@@ -46,7 +46,6 @@ player_stat_normalized = min_max_scaler.fit_transform(players_stat)
 players_stat_normalized_df = pd.DataFrame(player_stat_normalized)
 players_name = players_dataframe.values[:,1] # np array
 print num_features, num_players
-
 
 
 pca_17d_transformed_data = np.load( "nba_pca_transformed_17d_matrix.npy")
@@ -63,7 +62,7 @@ original_dataset_dict = {
 d_reduction_dataset_dict = {
     # 'PCA_17d': pca_17d_transformed_data,
     # 'pca_3d': pca_3d_transformed_data,
-    # 'ICA_original_37d': ica_original_25d_transformed_data,
+    # 'ICA_original_25d': ica_original_25d_transformed_data,
     'RP_origininal_18d': rp_original_18d_transformed_data,
     'RP_normalized_17d': rp_normalized_17d_transformed_data
     }
@@ -181,7 +180,7 @@ def reduced_kmeans():
         plt.savefig(filename)
         plt.close()
 
-reduced_kmeans()
+# reduced_kmeans()
 
 def em():
     filename_template = "NBA_EM_{type}_results{extension}"
@@ -264,4 +263,4 @@ def reduced_em():
         plt.close()
 
 # em()
-reduced_em()
+# reduced_em()

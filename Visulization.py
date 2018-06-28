@@ -21,9 +21,9 @@ players_dataframe.drop(columns='Total_Plus_Minus', inplace=True)
 #         f.writelines(item + '\n')
 # f.close()
 # print players_dataframe.head()
-print 'shape:', players_dataframe.shape #452x124, 411x124 after remove <15 games
+print 'shape:', players_dataframe.shape
 players_dataframe.fillna(value=0.0, inplace=True)
-# print players_dataframe.filter(regex='Pct').head()
+
 for column in players_dataframe.filter(regex='Pct').columns:
     players_dataframe[column] = players_dataframe[column].apply(lambda x:x*100)
 
@@ -38,7 +38,7 @@ for column in players_dataframe.filter(regex='Pct').columns:
 
 # print players_data.columns
 players_name = players_dataframe.values[:,1] # np array
-players_stat = players_dataframe.values[:,3:] # np array
+players_stat = players_dataframe.values[:,3:] # np array #411x119 after remove <15 games
 players_stat_columns = players_dataframe.columns.values[3:]
 num_players, num_features  = players_stat.shape # (411, 119)
 
@@ -104,14 +104,14 @@ def plot_boxplot():
         for j in range(columns):
             idx = 100*rows + 10*columns + i*columns+j+1
             plt.subplot(idx)
-            plt.boxplot(players_stat[:, start:end], 0, '')
+            plt.boxplot(player_stat_normalized[:, start:end], 0, '')
             plt.xticks(np.arange(step),players_stat_columns[start:end],rotation=70)
             plt.xticks(fontsize=6)
             start += step
             end += step
     plt.subplots_adjust(top=0.92, bottom =0.2, hspace = 0.4)
-    plt.suptitle('Original Data', fontsize=16)
-    plt.savefig('OriginalData_BoxPlot_Cleaned.png')
+    plt.suptitle('Normalized Data', fontsize=16)
+    plt.savefig('NormalizedData_BoxPlot.png')
     plt.close()
 # plot_boxplot()
 
@@ -153,6 +153,7 @@ def kmeans_plot_clustering_names():
                         for idx in range(len(names_list))]
         print result_list
 
+
 # kmeans_plot_pca_3d()
 # kmeans_plot_clustering_names()
 
@@ -160,7 +161,7 @@ def em_plot_clustering_names():
     # index of row = desired number of clusters - 5
     # cluster_results = original_em_clustering_np_matrix[49]
     # cluster_results = normalized_em_clustering_np_matrix[51]
-    cluster_results = ica_original_em_clustering_np_matrix[49]
+    cluster_results = original_em_clustering_np_matrix[51]
     num_clusters=np.amax(cluster_results)+1
     print 'num_clusters', num_clusters
     for cluster in range(num_clusters):
@@ -200,9 +201,9 @@ def plot_kmenas_v_measure(n_clusters):
     plt.xticks(np.arange(len(v_measure_array)), xvalues)
     plt.yticks(np.linspace(0.6, 1.0, 9))
     plt.grid(True)
-    plt.xlabel("K-means clustering")
-    plt.ylabel("V-measure score")
-    plt.title("PCA EM clustering results are set as true lables")
+    plt.xlabel("\nK-means Clustering",fontsize=14)
+    plt.ylabel("V-measure score",fontsize=14)
+    plt.title("PCA EM clustering results are set as true lables",fontsize=14)
     plt.show()
 
 def plot_em_v_measure(n_clusters):
@@ -219,11 +220,12 @@ def plot_em_v_measure(n_clusters):
     plt.figure(figsize=(8, 8))
     plt.plot(range(len(v_measure_array)), v_measure_array, "o-")
     plt.xticks(np.arange(len(v_measure_array)), xvalues)
+    plt.ylim(0.6,1.0)
     plt.yticks(np.linspace(0.6, 1.0, 9))
     plt.grid(True)
-    plt.xlabel("EM clustering")
-    plt.ylabel("V-measure score")
-    plt.title("PCA EM clustering results are set as true lables")
+    plt.xlabel("\nEM clustering",fontsize=14)
+    plt.ylabel("V-measure score",fontsize=14)
+    plt.title("PCA EM clustering results are set as true lables",fontsize=14)
     plt.show()
 
 def plot_kmeans_em_v_meansrue(n_clusters):
@@ -242,15 +244,16 @@ def plot_kmeans_em_v_meansrue(n_clusters):
     plt.xticks(np.arange(len(v_measure_array)), xvalues)
     plt.yticks(np.linspace(0.6, 1.0, 9))
     plt.grid(True)
-    plt.xlabel("\nDatasets")
-    plt.ylabel("V-measure score")
-    plt.title("Comparison of clusteirng between EM and Kmeans")
+    plt.xlabel("\nDatasets",fontsize=14)
+    plt.ylabel("V-measure score",fontsize=14)
+    plt.title("Comparison of clustering consistency \nbetween EM and Kmeans on the same dataset",fontsize=14)
     plt.show()
 
+def append_em_pca_label_to_file(n_clusters):
 
 
 
-plot_kmenas_v_measure(54)
-# plot_em_v_measure(54)
+# plot_kmenas_v_measure(54)
+plot_em_v_measure(54)
 # plot_kmeans_em_v_meansrue(54)
-# append_label_to_file(51)
+# append_label_to_file(54)
