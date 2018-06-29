@@ -9,6 +9,7 @@ from sklearn import metrics
 from sklearn import preprocessing
 from sklearn.decomposition import PCA, FastICA
 from sklearn.metrics.cluster import homogeneity_score, completeness_score
+from sklearn.manifold import TSNE
 import time
 
 players_dataframe = pd.read_csv("nba_player_whole_stats.csv")
@@ -87,6 +88,9 @@ all_em_clustering_np_matrix = {
 'RP_normalized':    rp_normalized_em_clustering_np_matrix
 }
 
+pca_17d_transformed_data = np.load( "nba_pca_transformed_17d_matrix.npy")
+
+
 colors = ['darkorchid', 'turquoise', 'darkorange', 'crimson', 'green',
           'dodgerblue', 'grey', 'greenyellow', 'navy', 'aqua',
           'brown', 'crimson', 'darkgoldenrod']
@@ -116,7 +120,7 @@ def plot_boxplot():
 # plot_boxplot()
 
 def kmeans_plot_pca_3d():
-    cluster_results = np.load("k_means_k-means++_11clusters.npy")
+    cluster_results = pca_em_clustering_np_matrix
     cluster_results = cluster_results[6] # pick the row of 11 clusters
     num_clusters=np.amax(cluster_results)+1
     print num_clusters
@@ -153,6 +157,73 @@ def kmeans_plot_clustering_names():
                         for idx in range(len(names_list))]
         print result_list
 
+def em_plot_pca_2d():
+    pca_2d_data = np.load("nba_pca_transformed_2d_matrix.npy")
+    cluster_results = pca_em_clustering_np_matrix
+    cluster_results = cluster_results[49] # pick the row of 54 clusters
+    num_clusters=np.amax(cluster_results)+1
+    plt.figure(figsize=(16, 9))
+    for label in range(num_clusters):
+        names_list = players_name[cluster_results == label]
+        efficiency_list = players_dataframe.Efficiency.values[cluster_results == label]
+        avg_shot_dist_list = list(players_dataframe.Avg_Shot_Dis_ft[cluster_results == label])
+        result_list = [
+            # names_list[idx]+'_'+
+            str(int(efficiency_list[idx]))+':'+
+            str(int(avg_shot_dist_list[idx]))
+            for idx in range(len(names_list))]
+        data = pca_2d_data[cluster_results==label]
+        for point, result in zip(data, result_list):
+            plt.text(point[0], point[1],str(label)+":"+result,color= colors[(label+1)%13])
+    plt.xlim(-2.0,2.3)
+    plt.ylim(-2.3,2.3)
+    plt.xlabel("PCA 1st Component")
+    plt.ylabel("PCA 2nd Component")
+    plt.title("EM on PCA data 54 clusters, Best results\nLabel:Efficiecy:Avg_Shot_Dist\n")
+    plt.savefig("EM_PCA_2D_Result_Plot.png")
+    plt.close()
+
+# em_plot_pca_2d()
+
+def tsne_plot(perplexity, exagg):
+    # pca_data = pca_17d_transformed_data
+    pca_data = players_stat
+    data_tsne = TSNE(n_components=2, perplexity=perplexity, early_exaggeration=exagg).\
+        fit_transform(pca_data)
+    x_max, x_min = np.amax(data_tsne[:,0]), np.amin(data_tsne[:,0])
+    y_max, y_min = np.amax(data_tsne[:,1]), np.amin(data_tsne[:,1])
+    cluster_results = pca_em_clustering_np_matrix
+    cluster_results = cluster_results[49] # pick the row of 54 clusters
+    num_clusters=np.amax(cluster_results)+1
+    plt.figure(figsize=(16, 9))
+    for label in range(num_clusters):
+        names_list = players_name[cluster_results == label]
+        efficiency_list = players_dataframe.Efficiency.values[cluster_results == label]
+        avg_shot_dist_list = list(players_dataframe.Avg_Shot_Dis_ft[cluster_results == label])
+        result_list = [
+            # names_list[idx]+'_'+
+            str(int(efficiency_list[idx]))+':'+
+            str(int(avg_shot_dist_list[idx]))
+            for idx in range(len(names_list))]
+        data = data_tsne[cluster_results==label]
+        for point, result in zip(data, result_list):
+            # plt.text(point[0], point[1],str(label)+":"+result,color= colors[(label+1)%13])
+            plt.text(point[0], point[1], str(label), color=colors[(label + 1) % 13])
+    plt.xlim(x_min,x_max)
+    plt.ylim(y_min,y_max)
+    plt.xlabel("t-SNE x")
+    plt.ylabel("t-SNE y")
+    plt.title(("t-SNE on PCA 17d data 54 clusters\nPerplexity=%d, Exaggeration=%d\nLabel:Efficiecy:Avg_Shot_Dist\n") % (perplexity,exagg))
+    plt.savefig(("tSNE_Plot_Perp_%d_Exagg_%d.png") % (perplexity,exagg))
+    # plt.close()
+    # plt.show()
+# tsne_plot(7)
+
+def plot_tsne_varing_perplexity():
+    for perp in [7]:
+        for exagg in [12, 30, 50]:
+            tsne_plot(perp, exagg)
+plot_tsne_varing_perplexity()
 
 # kmeans_plot_pca_3d()
 # kmeans_plot_clustering_names()
@@ -250,10 +321,16 @@ def plot_kmeans_em_v_meansrue(n_clusters):
     plt.show()
 
 def append_em_pca_label_to_file(n_clusters):
+    row_idx = n_clusters - 5
+    column_name = 'label_pca_em'
+    labels = pca_em_clustering_np_matrix[row_idx]
+    players_dataframe[column_name] = labels
+    players_dataframe.to_csv('nba_player_pca_em_stats_labels.csv')
 
 
 
 # plot_kmenas_v_measure(54)
-plot_em_v_measure(54)
+# plot_em_v_measure(54)
 # plot_kmeans_em_v_meansrue(54)
 # append_label_to_file(54)
+# append_em_pca_label_to_file(54)

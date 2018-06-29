@@ -143,6 +143,13 @@ def pca_3_components():
     transformed_data = pca.transform(players_stat_normalized)
     np.save(filename, transformed_data)
 
+def pca_2_components():
+    filename = "nba_pca_transformed_2d_matrix.npy"
+    pca = PCA(n_components=2, svd_solver='full')
+    pca.fit(players_stat_normalized)
+    transformed_data = pca.transform(players_stat_normalized)
+    np.save(filename, transformed_data)
+
 def ica_varing_components(data, type):
     n_components_max = 56 # num_features+1
     n_components = np.arange(2, n_components_max, 1)
@@ -254,7 +261,7 @@ def run_rp():
 # pca_varing_k()
 # pca_17_components()
 # pca_3_components()
-run_ica()
+# run_ica()
 # ica_original_25_components()
 # run_rp()
-#
+pca_2_components()
