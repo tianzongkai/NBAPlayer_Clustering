@@ -139,7 +139,7 @@ def pca_3_components():
     np.save(filename, transformed_data)
 
 def pca_2_components():
-    # save pca 2 dimensional transformed numpay array into file
+    # save pca 2 dimensional transformed numpay array into file for later visualization
     filename = "nba_pca_transformed_2d_matrix.npy"
     pca = PCA(n_components=2, svd_solver='full')
     pca.fit(players_stat_normalized)
@@ -147,7 +147,8 @@ def pca_2_components():
     np.save(filename, transformed_data)
 
 def ica_varing_components(data, type):
-    n_components_max = 56 # num_features+1
+    # Run ICA demensionality reduction on original data
+    n_components_max = 56
     n_components = np.arange(2, n_components_max, 1)
     kurtosis_matrix = np.array([])
     for n in n_components:
@@ -155,18 +156,15 @@ def ica_varing_components(data, type):
         ica = FastICA(n_components=n,whiten=True, algorithm='deflation', max_iter=100)
         ica.fit(data)
         transformed_data = ica.transform(data)
-        #kurtosis = sta.kurtosis(transformed_data, axis=None)
-        # print sta.kurtosis(transformed_data, axis=None)
         kurtosis = sta.kurtosis(transformed_data, axis=0) # for Normal distribution, kurtosis = 0 by this algorithm
         # shape = n_components when axis = 0, meaning kurtosis is calculated for each column
         kurtosis_matrix = np.append(kurtosis_matrix, np.average(kurtosis))
+    
+    # Plot n_components vs. kurtosis
     plt.figure(figsize=(16, 9))
-    # print kurtosis_matrix
     plt.plot(n_components, kurtosis_matrix, "o-", label="kurtosis")
     plt.grid(True)
     plt.xlim(np.amin(n_components), np.amax(n_components))
-    # plt.ylim(1e-17,1e-1)
-    # plt.yscale('log')
     plt.xticks(range(np.amin(n_components), n_components_max+3, 3))
     plt.ylabel('kurtosis')
     plt.xlabel('# of components')
@@ -190,6 +188,7 @@ def ica_original_25_components():
     np.save(filename,transformed_data)
 
 def rp(data, type):
+    # Run randomized projection on data
     filename_template = "nba_{type}_rp_transformed_{dimension}d_matrix.npy"
     iteration = 50
     n_components_min = 2
@@ -230,9 +229,7 @@ def rp(data, type):
     np.save(filename,best_transformed_data)
     plt.figure(figsize=(16, 9))
     plt.scatter(x_value, distortion_array, marker='+')
-    # plt.xlim(n_components_min, n_components_max)
     plt.xticks(np.arange(n_components_min-1,n_components_max+1,1))
-    # plt.yscale('log')
     plt.grid(True)
     plt.xlabel("# of components")
     plt.ylabel("Distortion")
@@ -260,4 +257,4 @@ def run_rp():
 # run_ica()
 # ica_original_25_components()
 # run_rp()
-pca_2_components()
+#pca_2_components()
