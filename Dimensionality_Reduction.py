@@ -45,20 +45,15 @@ def correlation_egienvalue():
     eigvalues, eigenvectors = la.eig(cov)
     abs_cov = np.absolute(cov)
     abs_corr = np.absolute(corr)
-    #cov = np.dot(non_label_dataset.T, non_label_dataset)
-    # print abs_corr
-    # print eigvalues
+
     plt.figure(figsize=(18, 9))
     plt.subplot(131)
     cmap = cm.get_cmap()
-    cax = plt.imshow(abs_corr, interpolation="nearest", cmap=cmap)
-    #plt.grid(True)
-    plt.title('Feature Correlation')
-    # labels = range(num_features)
-    # plt.xlabel(labels, fontsize=9)
-    # plt.ylabel(labels, fontsize=9)
+    cax = plt.imshow(abs_corr, interpolation="nearest", cmap=cmap)    plt.title('Feature Correlation')
+
     plt.xticks(range(0, num_features, 10))
     plt.yticks(range(0, num_features, 10))
+    
     # Add colorbar, make sure to specify tick locations to match desired ticklabels
     plt.colorbar(cax, ticks=np.arange(0.1,1.2,0.1))
 
@@ -68,7 +63,6 @@ def correlation_egienvalue():
     plt.xticks(range(1, 12))
     plt.ylabel('Eigenvalue')
     plt.xlabel('Index of eigenvalue')
-    # plt.legend()
     plt.title("First 11 eigenvalues")
 
     plt.subplot(133)
@@ -84,6 +78,8 @@ def correlation_egienvalue():
     # plt.show()
 
 def pca_varing_k():
+    # Do a PCA dimensionality reduction from dimension 2-20
+    # And compare retained variance as well as reconstruction errors
     print 'pca_varing_k'
     n_components = np.arange(2,20,1)
     retained_variance_vs_components = np.array([])
@@ -93,22 +89,23 @@ def pca_varing_k():
         pca = PCA(n_components=n, svd_solver='full')
         pca.fit(players_stat_normalized)
         sum_variance_ration = np.sum(pca.explained_variance_ratio_)
+        
         retained_variance_vs_components = np.append(retained_variance_vs_components, sum_variance_ration)
+        
+        # compute reconstruction error
         transformed_data = pca.transform(players_stat_normalized)
         reconstructed_data = pca.inverse_transform(transformed_data)
-        #dist_matrix = sp.distance.cdist(non_label_dataset, reconstructed_data)
-        #dist_matrix = la.norm(non_label_dataset - reconstructed_data)
         dist_matrix = 100 * abs((la.norm(players_stat_normalized) - la.norm(reconstructed_data)))/ la.norm(players_stat_normalized)
         sum_dist = np.sum(dist_matrix)
         distance_vs_components = np.append(distance_vs_components, sum_dist)
+    
     # print retained_variance_vs_components
     # print distance_vs_components
+    
     plt.figure(figsize=(16, 9))
     plt.subplot(121)
     plt.plot(n_components, retained_variance_vs_components, "o-", label="retained variance ratio")
     plt.grid(True)
-    # plt.xlim(2, 9)
-    #plt.ylim(0, 0.7)
     plt.xticks(n_components)
     plt.ylabel('retained variance ratio')
     plt.xlabel('# of components')
@@ -117,8 +114,6 @@ def pca_varing_k():
     plt.subplot(122)
     plt.plot(n_components, distance_vs_components, "go-", label="frobenius norm % change \nof projected-back data")
     plt.grid(True)
-    # plt.xlim(2, 9)
-    #plt.ylim(0.06, 0.14)
     plt.xticks(n_components)
     plt.ylabel('frobenius norm % change')
     plt.xlabel('# of components')
@@ -128,6 +123,7 @@ def pca_varing_k():
     plt.close()
 
 def pca_17_components():
+    # save pca 17 dimensional transformed numpay array into file
     filename = "nba_pca_transformed_17d_matrix.npy"
     pca = PCA(n_components=17, svd_solver='full')
     pca.fit(players_stat_normalized)
@@ -135,6 +131,7 @@ def pca_17_components():
     np.save(filename, transformed_data)
 
 def pca_3_components():
+    # save pca 3 dimensional transformed numpay array into file
     filename = "nba_pca_transformed_3d_matrix.npy"
     pca = PCA(n_components=3, svd_solver='full')
     pca.fit(players_stat_normalized)
@@ -142,6 +139,7 @@ def pca_3_components():
     np.save(filename, transformed_data)
 
 def pca_2_components():
+    # save pca 2 dimensional transformed numpay array into file
     filename = "nba_pca_transformed_2d_matrix.npy"
     pca = PCA(n_components=2, svd_solver='full')
     pca.fit(players_stat_normalized)
