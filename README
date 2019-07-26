@@ -1,14 +1,14 @@
 Purpose of the project is to find closest replacement in terms of ability and playing-style if a target player is not acquirable from 
 market or current plays leaves.
 
-Files:
+****************   Files    ****************
 1. WebScraping.py: Scape original data from a website
 2. Dimensionality_Reduction.py: Preprocess data and run dimensionality reduction
 3. Clustering.py: Run clustering algorithm on preprocessed data
 4. Visulization.py: Visulize the results and conduct analysis
 
 
-Samples of the clustering results:
+********   Samples of the clustering results   ********   
 
 (stats are Efficiency and Player's Average Shooting Distance)
 Group 10:
