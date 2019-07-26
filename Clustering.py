@@ -10,35 +10,20 @@ from sklearn.decomposition import PCA, FastICA
 import time
 
 
-# players_data = pd.read_csv("nba_player_whole_stats_edited_column_name.csv")
 players_dataframe = pd.read_csv("nba_player_whole_stats.csv")
 players_dataframe.drop(players_dataframe[players_dataframe.Games < 15].index, inplace=True)
 players_dataframe.drop(columns='Total_Plus_Minus', inplace=True)
-# write data columns to file
-# with open('column_dictionary.txt','w+') as f:
-#     for item in players_dataframe.columns:
-#         f.writelines(item + '\n')
-# f.close()
-# print players_dataframe.head()
+
 
 print 'shape:', players_dataframe.shape
 players_dataframe.fillna(value=0.0, inplace=True)
 
-# Apply operates on each row or column with the lambda function
-# x is a variable for the whole row or column
+# Apply operations on each row or column with the lambda function
+# x is a variable representing each row or column
 for column in players_dataframe.filter(regex='Pct').columns:
     players_dataframe[column] = players_dataframe[column].apply(lambda x:x*100)
-# print players_dataframe.loc[:,[players_dataframe.columns.str.contains('Pct')]]
 
-# print players_dataframe.And_One
-# missing_values_count = players_dataframe.isnull().sum()
-# print type(missing_values_count)
-# print missing_values_count
-# print len(players_dataframe.loc[players_dataframe.And_One.isnull()].Player)
-
-
-# print players_data.columns
-players_stat = players_dataframe.values[:,3:] # np array #411x119 after remove <15 games
+players_stat = players_dataframe.values[:,3:] # (411, 119) after remove <15 games
 num_features, num_players = players_stat.shape
 
 min_max_scaler = preprocessing.MinMaxScaler()
@@ -47,7 +32,7 @@ players_stat_normalized_df = pd.DataFrame(player_stat_normalized)
 players_name = players_dataframe.values[:,1] # np array
 print num_features, num_players
 
-
+# Load previously saved transformed data; variable is numpy array
 pca_17d_transformed_data = np.load( "nba_pca_transformed_17d_matrix.npy")
 pca_3d_transformed_data = np.load( "nba_pca_transformed_3d_matrix.npy")
 ica_original_25d_transformed_data = np.load("nba_original_ica_transformed_25d_matrix.npy")
@@ -59,20 +44,25 @@ original_dataset_dict = {
     'Normalized': player_stat_normalized
 }
 
+
+# put all transformed data in a dictionary
 d_reduction_dataset_dict = {
-    # 'PCA_17d': pca_17d_transformed_data,
-    # 'pca_3d': pca_3d_transformed_data,
-    # 'ICA_original_25d': ica_original_25d_transformed_data,
+    'PCA_17d': pca_17d_transformed_data,
+#     'pca_3d': pca_3d_transformed_data,
+    'ICA_original_25d': ica_original_25d_transformed_data,
     'RP_origininal_18d': rp_original_18d_transformed_data,
     'RP_normalized_17d': rp_normalized_17d_transformed_data
     }
 
 def kmeans(type):
+    # run kmeans on original 119 features
     if type == 'Original':
         data = players_stat
     else:
         data = player_stat_normalized
-    initialization = 'k-means++'  # 'k-means++'
+        
+    # initalizing centering with k-means++ algorithm to ensure initial centers are well apart
+    initialization = 'k-means++'
     min = 5
     max = 81
     step = 5
@@ -86,9 +76,12 @@ def kmeans(type):
         kmeans = KMeans(init=initialization, n_clusters=i, n_init=50).fit(data)
         cluster_labels = kmeans.fit_predict(data)
         varing_k_cluster_labels.append(cluster_labels)
-        silhouette = metrics.silhouette_score(data, cluster_labels)
-        sse = kmeans.inertia_ / num_players
+        
+        silhouette = metrics.silhouette_score(data, cluster_labels)        
         silhouette_scores = np.append(silhouette_scores, silhouette)
+        
+        # sum of squared error
+        sse = kmeans.inertia_ / num_players
         sse_array = np.append(sse_array, sse)
     np.save(filename, varing_k_cluster_labels)
     plt.close()
@@ -99,7 +92,6 @@ def kmeans(type):
     plt.plot(k_range, sse_array, "ro-", label='Avg Sum of Squared Error')
     plt.grid(True)
     plt.xticks(range(min, max, step))
-    # plt.yticks(np.linspace(0.14, 0.23, 10))
     plt.ylabel('Avg Sum of Squared Error')
     plt.xlabel('# of clusters')
     # plt.legend()
@@ -131,6 +123,7 @@ def run_kmeans():
 # run_kmeans()
 
 def reduced_kmeans():
+    # run kmeans on d-reducted data
     filename_template = "NBA_D_Reduction_{type}_kmeans_plus_results{extension}"
     min = 5
     max = 81
@@ -183,6 +176,7 @@ def reduced_kmeans():
 # reduced_kmeans()
 
 def em():
+    # Run Gaussian Mixture model on 119 features
     filename_template = "NBA_EM_{type}_results{extension}"
     min = 5
     max = 81
@@ -223,6 +217,7 @@ def em():
         plt.close()
 
 def reduced_em():
+     # Run Gaussian Mixture model on d-reduced data
     filename_template = "NBA_EM_D_Reduction_{type}_results{extension}"
     min = 5
     max = 81
