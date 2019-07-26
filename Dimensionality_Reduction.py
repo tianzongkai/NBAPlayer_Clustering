@@ -11,32 +11,30 @@ from scipy import stats as sta
 from sklearn import mixture, random_projection
 import time
 
+# Read whole data saved from 1st script file
 players_dataframe = pd.read_csv("nba_player_whole_stats.csv")
+
+# Drop players that played less than 15 games and one extra column
 players_dataframe.drop(players_dataframe[players_dataframe.Games < 15].index, inplace=True)
 players_dataframe.drop(columns='Total_Plus_Minus', inplace=True)
 
-# write data columns to file
-# with open('column_dictionary.txt','w+') as f:
-#     for item in players_dataframe.columns:
-#         f.writelines(item + '\n')
-# f.close()
-# print players_dataframe.head()
-print 'shape:', players_dataframe.shape #452x124, 411x124 after remove <15 games
+
+print 'shape:', players_dataframe.shape # 452 x 124 in original file, 411x124 after remove <15 games
 players_dataframe.fillna(value=0.0, inplace=True)
+
+# times percentage data by 100 to rescale the feature to [0,1)
 for column in players_dataframe.filter(regex='Pct').columns:
     players_dataframe[column] = players_dataframe[column].apply(lambda x:x*100)
 
-# print players_dataframe.And_One
-# missing_values_count = players_dataframe.isnull().sum()
-# print type(missing_values_count)
-# print missing_values_count
-# print len(players_dataframe.loc[players_dataframe.And_One.isnull()].Player)
 
 
-# print players_data.columns
+# Removing the first 3 columns: player_name, team and height
+# If include height in clustering, an bias is introduced into the data that
+# players at similar height are more likely to be put in the same cluster
 players_stat = players_dataframe.values[:,3:] # np array
 num_features = players_stat.shape[1]
 
+# Using  x_normalized = (x-x.min) / (x.max - x.min) to scale all features to range [0,1]
 min_max_scaler = preprocessing.MinMaxScaler()
 players_stat_normalized = min_max_scaler.fit_transform(players_stat)
 players_stat_normalized_df = pd.DataFrame(players_stat_normalized)
