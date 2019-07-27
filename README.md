@@ -1,4 +1,4 @@
-Purpose of the project is to find closest replacement in terms of ability and playing-style if a target player is not acquirable from 
+##Purpose of the project is to find closest replacement in terms of ability and playing-style if a target player is not acquirable from 
 market or current plays leaves.
 
 ****************   Files    ****************
@@ -11,7 +11,7 @@ market or current plays leaves.
 ********   Samples of the clustering results   ********   
 (Player name, Efficiency, Player's Average Shooting Distance)
 
-Group 10:
+*Group 10*:
 Derrick Rose, 23.11, 12.51
 Dwyane Wade, 24.78, 9.90
 LeBron James, 28.58, 12.25
