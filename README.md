@@ -1,4 +1,4 @@
-## Purpose of the project is to find closest replacement in terms of ability and playing-style if a target player is not acquirable from market or current plays leaves.
+## Purpose of the project is to find closest replacement in terms of ability and playing-style if a target player is not acquirable from market or current player leaves.
 
 **Files**   
 1. WebScraping.py: Scape original data from a website
